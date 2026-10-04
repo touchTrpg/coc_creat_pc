@@ -564,7 +564,7 @@
         </div>
         <div class="form-group">
           <label>玩家名稱<span class="req">*</span></label>
-          <input type="text" id="playerName" placeholder="例：悠子" />
+          <input type="text" id="playerName" placeholder="例：MONA" />
         </div>
       </div>
 
@@ -1326,16 +1326,24 @@ ${inventory}`;
       document.getElementById("dondofuExportBox").textContent = dondofuText;
 
       // 2. Google 試算表對齊格式 (TSV)
+      // 第 10 列為所有技能名稱、第 11 列為對應技能值（未配點者帶入初始值，自訂技能已在資料庫最後）
+      const allocatedMap = Object.fromEntries(allocatedSkills.map(s => [s.name, s.value]));
+      const skillNameRow = skillDatabase.map(sk => sk.name).join("\t");
+      const skillValueRow = skillDatabase.map(sk => allocatedMap[sk.name] ?? sk.base).join("\t");
+      // 移除換行與 Tab，避免多行文字讓技能列偏移
+      const oneLine = text => text.replace(/[\t\r\n]+/g, " ");
+
       const sheetText = `調查員名稱\t${charName}\t玩家名稱\t${playerName}\t職業\t${occupation}\t年齡\t${age}\t性別\t${gender}
 現居地\t${residence}\t出生地\t${birthplace}\tHP\t${derived.hp}\tMP\t${derived.mp}\tSAN\t${derived.san}\tLUK\t${luckValue}
 STR\t${attrs.STR}\tCON\t${attrs.CON}\tDEX\t${attrs.DEX}\tAPP\t${attrs.APP}
 POW\t${attrs.POW}\tSIZ\t${attrs.SIZ}\tINT\t${attrs.INT}\tEDU\t${attrs.EDU}
 DB\t${derived.db}\t體格\t${derived.build}\tMOV\t${derived.mov}\t閃避\t${derived.dodge}\t母語\t${derived.ownLang}
-思想與信念\t${ideology}
-重要之人\t${person || "無"}\t意義非凡之地\t${place || "無"}\t寶貴之物\t${item || "無"}\t羈絆\t${bond}
-個人描述\t${desc}
-攜帶物品\t${inventory.replace(/\n/g, "、")}
-核心技能\t${allocatedSkills.map(s => `${s.name}(${s.value}%)`).join(", ")}`;
+思想與信念\t${oneLine(ideology)}
+重要之人\t${oneLine(person || "無")}\t意義非凡之地\t${oneLine(place || "無")}\t寶貴之物\t${oneLine(item || "無")}\t羈絆\t${bond}
+個人描述\t${oneLine(desc)}
+攜帶物品\t${oneLine(inventory.replace(/\n/g, "、"))}
+${skillNameRow}
+${skillValueRow}`;
 
       document.getElementById("sheetExportBox").textContent = sheetText;
 
