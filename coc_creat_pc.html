@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CoC 7th 調查員快速創角精靈</title>
+  <style>
+    :root {
+      --bg-color: #070a0d;
+      --card-bg: #0f141c;
+      --card-border: #1e2936;
+      --accent-color: #3fb950;
+      --accent-glow: rgba(63, 185, 80, 0.35);
+      --text-main: #56d364;
+      --text-title: #f0f6fc;
+      --text-muted: #6e7681;
+      --highlight-green: #39d353;
+      --danger: #f85149;
+      --danger-glow: rgba(248, 81, 73, 0.4);
+      --success: #238636;
+      --radius: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 720px;
+      margin-top: 6px;
+      margin-bottom: 40px;
+    }
+
+    /* 頂部進度條 */
+    .header-bar {
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .header-title {
+      font-size: 1.25rem;
+      color: var(--accent-color);
+      font-weight: bold;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .progress-container {
+      background: #141b24;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #1b6329, #2ea043, #3fb950);
+      width: 14%;
+      transition: width 0.35s ease;
+    }
+
+    .step-indicator {
+      margin-top: 6px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* 卡片頁面 */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      display: none;
+      animation: fadeIn 0.25s ease forwards;
+    }
+
+    .card.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      color: var(--text-title);
+      margin-bottom: 6px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.45;
+    }
+
+    /* 表單元件 */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-title);
+      margin-bottom: 5px;
+    }
+
+    .req {
+      color: var(--danger);
+      margin-left: 2px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 9px 11px;
+      background: #090d12;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: var(--text-main);
+      font-size: 0.92rem;
+      outline: none;
+      user-select: text;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 6px var(--accent-glow);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 75px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 480px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 屬性 Drag & Drop 區域 */
+    .pool-section {
+      background: #080c10;
+      border: 1px dashed var(--card-border);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .chips-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      min-height: 38px;
+    }
+
+    .num-chip {
+      background: #16202c;
+      border: 1px solid var(--accent-color);
+      color: var(--accent-color);
+      font-weight: bold;
+      font-size: 1.05rem;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: grab;
+      transition: all 0.2s;
+    }
+
+    .num-chip:active {
+      cursor: grabbing;
+      transform: scale(1.05);
+    }
+
+    .num-chip.selected {
+      background: var(--accent-color);
+      color: #000;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .num-chip.used {
+      display: none;
+    }
+
+    .attr-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    @media (max-width: 480px) {
+      .attr-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .attr-slot {
+      background: #090d12;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.25s ease;
+    }
+
+    .attr-slot.drag-over {
+      border-color: var(--accent-color);
+      background: #141f2c;
+    }
+
+    /* 教育小於60的紅色警示樣式 */
+    .attr-slot.slot-error {
+      border-color: var(--danger) !important;
+      background: rgba(248, 81, 73, 0.12) !important;
+      box-shadow: 0 0 8px var(--danger-glow) !important;
+    }
+
+    .attr-slot.slot-error .attr-slot-drop {
+      background: var(--danger) !important;
+      border-color: #ff7b72 !important;
+      color: white !important;
+    }
+
+    .attr-slot-drop {
+      min-width: 55px;
+      height: 32px;
+      background: #121820;
+      border: 1px dashed var(--card-border);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .attr-slot-drop.filled {
+      background: var(--success);
+      color: white;
+      border-style: solid;
+      border-color: #2ea043;
+    }
+
+    .attr-slot-drop.filled:hover::after {
+      content: " ✕";
+      font-size: 0.75rem;
+      margin-left: 3px;
+    }
+
+    /* 幸運擲骰樣式 */
+    .luck-box {
+      background: #080c10;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 20px 16px;
+      text-align: center;
+      margin: 14px 0;
+    }
+
+    .luck-display {
+      font-size: 2.8rem;
+      font-weight: bold;
+      color: var(--accent-color);
+      margin: 8px 0;
+    }
+
+    .dice-btn {
+      background: linear-gradient(135deg, #1b6329, #2ea043);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    .dice-btn:disabled {
+      background: #21262d;
+      color: #6e7681;
+      cursor: not-allowed;
+    }
+
+    /* 技能左右雙欄介面 */
+    .skill-split-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 580px) {
+      .skill-split-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .skill-col {
+      background: #080c10;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .skill-col-header {
+      font-size: 1rem;
+      font-weight: bold;
+      color: var(--text-title);
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* 自訂技能工具欄 */
+    .custom-skill-tool {
+      background: #101620;
+      border: 1px dashed var(--card-border);
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+
+    .custom-tool-inputs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .btn-add-custom {
+      width: 100%;
+      background: #1b6329;
+      color: white;
+      border: none;
+      padding: 6px;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-add-custom:hover {
+      background: #2ea043;
+    }
+
+    /* 技能總覽捲動清單 */
+    .skill-list-scroll {
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .skill-list-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .skill-list-scroll::-webkit-scrollbar-thumb {
+      background: #1e2936;
+      border-radius: 4px;
+    }
+
+    .skill-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 8px;
+      font-size: 0.88rem;
+      border-bottom: 1px solid #141b24;
+      border-radius: 4px;
+    }
+
+    .skill-item-row:hover {
+      background: #101620;
+    }
+
+    .skill-item-name {
+      color: var(--text-main);
+    }
+
+    .skill-item-val {
+      color: var(--text-muted);
+      font-family: monospace;
+      font-size: 0.95rem;
+    }
+
+    /* 當分配了點數，左欄變亮綠加粗 */
+    .skill-item-row.allocated {
+      background: rgba(46, 160, 67, 0.15);
+      border: 1px solid rgba(63, 185, 80, 0.4);
+    }
+
+    .skill-item-row.allocated .skill-item-name {
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .skill-item-row.allocated .skill-item-val {
+      color: var(--highlight-green);
+      font-weight: bold;
+      font-size: 1.05rem;
+      text-shadow: 0 0 6px var(--accent-glow);
+    }
+
+    /* 右欄技能配點分組 */
+    .tier-group {
+      margin-bottom: 12px;
+    }
+
+    .tier-header-label {
+      font-size: 1.15rem;
+      font-weight: bold;
+      color: var(--highlight-green);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .tier-header-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    .tier-select-wrapper {
+      margin-bottom: 6px;
+    }
+
+    /* 底部導航按鈕 */
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 18px;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.92rem;
+      font-weight: bold;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .btn-prev {
+      background: #16202c;
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-next {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    .btn-next:hover {
+      background: #4ade80;
+    }
+
+    /* 匯出區 */
+    .export-box {
+      background: #080c10;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      max-height: 180px;
+      overflow-y: auto;
+      margin-bottom: 8px;
+      color: var(--highlight-green);
+      user-select: text;
+    }
+
+    .btn-copy {
+      background: var(--success);
+      color: white;
+      margin-bottom: 12px;
+      width: 100%;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      background: var(--success);
+      color: white;
+      padding: 9px 18px;
+      border-radius: 6px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      display: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- 頂部進度條 -->
+    <div class="header-bar">
+      <div class="header-title">📜 CoC 7th 調查員快速創角</div>
+      <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="step-indicator" id="stepIndicator">步驟 1 / 7：調查員基本資料</div>
+    </div>
+
+    <!-- 步驟 1: 基本身分資料 -->
+    <div class="card active" id="step-1">
+      <div class="card-title">👤 基本資料</div>
+      <div class="card-subtitle">請填寫調查員的身分基本資訊。</div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>角色名稱<span class="req">*</span></label>
+          <input type="text" id="charName" placeholder="例：亞瑟．潘德爾頓" />
+        </div>
+        <div class="form-group">
+          <label>玩家名稱<span class="req">*</span></label>
+          <input type="text" id="playerName" placeholder="例：悠子" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>職業<span class="req">*</span></label>
+          <input type="text" id="occupation" placeholder="例：私家偵探、古董學者" />
+        </div>
+        <div class="form-group">
+          <label>性別</label>
+          <input type="text" id="gender" placeholder="例：男 / 女 / 其他" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>年齡</label>
+          <input type="number" id="age" value="28" min="15" max="90" />
+        </div>
+        <div class="form-group">
+          <label>現居地</label>
+          <input type="text" id="residence" placeholder="例：麻薩諸塞州 波士頓" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>出生地</label>
+        <input type="text" id="birthplace" placeholder="例：阿卡姆鎮" />
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-next" onclick="nextStep(2)">下一步：屬性分配 ➔</button>
+      </div>
+    </div>
+
+    <!-- 步驟 2: 屬性分配 -->
+    <div class="card" id="step-2">
+      <div class="card-title">🎲 屬性分配 (拖曳或點選)</div>
+      <div class="card-subtitle">
+        將數值池分配至 8 大屬性（<strong>每個數值限用一次</strong>）。<br />
+        <span style="color:var(--danger);">⚠️ 規則限制：<strong>EDU (教育) 不得低於 60</strong>（低於 60 將亮紅框警告且無法進入下一步）。</span>
+      </div>
+
+      <div class="pool-section">
+        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;">可用數值池 (點選或拖曳至下方)：</div>
+        <div class="chips-wrapper" id="chipsPool"></div>
+      </div>
+
+      <div class="attr-grid" id="attrSlotsContainer"></div>
+
+      <div class="btn-group">
+        <button class="btn btn-prev" onclick="prevStep(1)">⬅ 上一步</button>
+        <button class="btn btn-next" onclick="validateAttributesAndNext()">下一步：擲幸運值 ➔</button>
+      </div>
+    </div>
+
+    <!-- 步驟 3: 幸運值 -->
+    <div class="card" id="step-3">
+      <div class="card-title">🍀 幸運值判定</div>
+      <div class="card-subtitle">
+        幸運值由 <strong>3D6 × 5</strong> 獨立擲出（範圍 15 ~ 90）。<br />
+        <strong style="color:var(--danger);">注意：每位調查員僅限擲骰一次，不可重擲！</strong>
+      </div>
+
+      <div class="luck-box">
+        <div class="luck-display" id="luckDisplay">--</div>
+        <button type="button" class="dice-btn" id="rollLuckBtn" onclick="rollLuckOnce()">🎲 擲 3D6 × 5 幸運 (僅限一次)</button>
+        <div id="luckRollDetail" style="font-size:0.82rem; color:var(--text-muted); margin-top:8px;">尚未擲骰</div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-prev" onclick="prevStep(2)">⬅ 上一步</button>
+        <button class="btn btn-next" onclick="validateLuckAndNext()">下一步：技能分配 ➔</button>
+      </div>
+    </div>
+
+    <!-- 步驟 4: 技能總覽與分配 (無克蘇魯神話、自動排除已選技能) -->
+    <div class="card" id="step-4">
+      <div class="card-title">📚 技能總覽與分配</div>
+      <div class="card-subtitle">
+        右欄分配專長點數（<strong>不可重複選取，已選項目會自動從其他下拉移除；配點不可選「克蘇魯神話」</strong>），左欄即時連動變更並以 <strong style="color:var(--highlight-green);">綠色</strong> 標記。
+      </div>
+
+      <div class="skill-split-layout">
+        <!-- 左欄：技能總覽 + 自訂技能工具 -->
+        <div class="skill-col">
+          <div class="skill-col-header">
+            <span>技能總覽</span>
+            <span style="font-size:0.75rem; color:var(--text-muted);">即時連動</span>
+          </div>
+
+          <!-- 自訂技能工具 -->
+          <div class="custom-skill-tool">
+            <div class="custom-tool-inputs">
+              <input type="text" id="customSkillName" placeholder="自訂技能名稱" style="padding:6px;" />
+              <input type="number" id="customSkillBase" placeholder="初始%" value="1" min="1" max="99" style="max-width:65px; padding:6px;" />
+            </div>
+            <button type="button" class="btn-add-custom" onclick="addNewCustomSkill()">➕ 新增自訂技能</button>
+          </div>
+
+          <!-- 技能清單列表 -->
+          <div class="skill-list-scroll" id="skillOverviewList"></div>
+        </div>
+
+        <!-- 右欄：技能分配 -->
+        <div class="skill-col">
+          <div class="skill-col-header">
+            <span>技能分配</span>
+            <span style="font-size:0.75rem; color:var(--highlight-green);">共 9 項配額</span>
+          </div>
+
+          <div id="skillTiersContainer"></div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-prev" onclick="prevStep(3)">⬅ 上一步</button>
+        <button class="btn btn-next" onclick="validateSkillsAndNext()">下一步：思想與羈絆 ➔</button>
+      </div>
+    </div>
+
+    <!-- 步驟 5: 思想、背景與羈絆 -->
+    <div class="card" id="step-5">
+      <div class="card-title">🕯️ 思想、信念與羈絆</div>
+      <div class="card-subtitle">
+        <strong>思想與信念必填</strong>；「寶貴之物 / 重要之人 / 意義非凡之地」<strong>至少填一項</strong>並指定核心羈絆。
+      </div>
+
+      <div class="form-group">
+        <label>思想與信念<span class="req">* (必填)</span></label>
+        <textarea id="bgIdeology" placeholder="例：堅信真相能戰勝恐懼；或誓死守護家族的名譽。"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>重要之人</label>
+        <input type="text" id="bgPerson" placeholder="例：失蹤的未婚妻艾瑪、倫敦大學恩師" />
+      </div>
+
+      <div class="form-group">
+        <label>意義非凡之地</label>
+        <input type="text" id="bgPlace" placeholder="例：童年避暑的燈塔、祖父的研究室" />
+      </div>
+
+      <div class="form-group">
+        <label>寶貴之物</label>
+        <input type="text" id="bgItem" placeholder="例：父親留下的舊銀質懷錶" />
+      </div>
+
+      <div class="form-group">
+        <label>指定核心【羈絆】<span class="req">*</span></label>
+        <select id="bondChoice">
+          <option value="思想與信念">思想與信念</option>
+          <option value="重要之人">重要之人</option>
+          <option value="意義非凡之地">意義非凡之地</option>
+          <option value="寶貴之物">寶貴之物</option>
+        </select>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-prev" onclick="prevStep(4)">⬅ 上一步</button>
+        <button class="btn btn-next" onclick="validateBackstoryAndNext()">下一步：描述與物品 ➔</button>
+      </div>
+    </div>
+
+    <!-- 步驟 6: 人物描述與物品 -->
+    <div class="card" id="step-6">
+      <div class="card-title">🎒 調查員描述與隨身物品</div>
+      <div class="card-subtitle">填寫外貌特徵、生平簡述與攜帶物品清單。</div>
+
+      <div class="form-group">
+        <label>個人外貌與形象描述</label>
+        <textarea id="charDesc" placeholder="穿著風格、身材特徵、言行習慣或傷疤..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>隨身攜帶物品清單 (每行一項)</label>
+        <textarea id="charInventory" placeholder="例：&#10;筆記本與鋼筆&#10;.38 轉輪手槍 (裝彈 6 發)&#10;手電筒與備用電池&#10;急救包&#10;皮夾與記者證"></textarea>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-prev" onclick="prevStep(5)">⬅ 上一步</button>
+        <button class="btn btn-next" onclick="generateFinalSheet()">完成！生成角色卡 ➔</button>
+      </div>
+    </div>
+
+    <!-- 步驟 7: 完成與匯出 -->
+    <div class="card" id="step-7">
+      <div class="card-title">🎉 調查員創建完成！</div>
+      <div class="card-subtitle">衍生數值已全自動計算完成，可點擊下方按鈕一鍵複製。</div>
+
+      <label>📋 Google 試算表（悠子版 7th 角色卡）複製格式：</label>
+      <div class="export-box" id="sheetExportBox"></div>
+      <button class="btn btn-copy" onclick="copyToClipboard('sheetExportBox')">📑 複製 Google 試算表貼上資料 (TSV)</button>
+
+      <label style="margin-top: 8px;">💬 凍豆腐 / 網路跑團平台簡易卡格式：</label>
+      <div class="export-box" id="dondofuExportBox"></div>
+      <button class="btn btn-copy" onclick="copyToClipboard('dondofuExportBox')">💬 複製 凍豆腐簡易文字卡</button>
+
+      <div class="btn-group">
+        <button class="btn btn-prev" onclick="prevStep(6)">⬅ 返回修改</button>
+        <button class="btn btn-next" onclick="restart()">🔄 重新創建</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toastMsg">已複製到剪貼簿！</div>
+
+  <script>
+    // 屬性數值池
+    const POOL_VALUES = [85, 75, 60, 60, 50, 50, 45, 40];
+
+    const ATTR_DEFS = [
+      { id: "STR", name: "力量 (STR)" },
+      { id: "CON", name: "體質 (CON)" },
+      { id: "DEX", name: "敏捷 (DEX)" },
+      { id: "APP", name: "外貌 (APP)" },
+      { id: "POW", name: "意志 (POW)" },
+      { id: "SIZ", name: "體型 (SIZ)" },
+      { id: "INT", name: "智力 (INT)" },
+      { id: "EDU", name: "教育 (EDU)" }
+    ];
+
+    // CoC 7th 技能資料庫
+    let skillDatabase = [
+      { name: "偵查", base: 25 },
+      { name: "聆聽", base: 20 },
+      { name: "圖書館使用", base: 20 },
+      { name: "心理學", base: 10 },
+      { name: "急救", base: 30 },
+      { name: "醫學", base: 1 },
+      { name: "說服", base: 10 },
+      { name: "話術", base: 5 },
+      { name: "魅惑", base: 15 },
+      { name: "威嚇", base: 15 },
+      { name: "閃避", base: 25 },
+      { name: "隱密行動", base: 20 },
+      { name: "戰鬥-鬥毆", base: 25 },
+      { name: "火器-手槍", base: 20 },
+      { name: "火器-步槍/霰彈", base: 25 },
+      { name: "自動車駕駛", base: 20 },
+      { name: "機械維修", base: 10 },
+      { name: "電器維修", base: 10 },
+      { name: "神秘學", base: 5 },
+      { name: "歷史", base: 5 },
+      { name: "自然學", base: 10 },
+      { name: "考古學", base: 1 },
+      { name: "人類學", base: 1 },
+      { name: "導航", base: 10 },
+      { name: "鎖匠", base: 1 },
+      { name: "巧手", base: 10 },
+      { name: "攀爬", base: 20 },
+      { name: "跳躍", base: 20 },
+      { name: "游泳", base: 20 },
+      { name: "追蹤", base: 10 },
+      { name: "母語", base: 60 },
+      { name: "外語", base: 1 },
+      { name: "會計", base: 5 },
+      { name: "估價", base: 5 },
+      { name: "藝術與工藝", base: 5 },
+      { name: "科學", base: 1 },
+      { name: "求生", base: 10 },
+      { name: "騎術", base: 5 },
+      { name: "操縱重型機械", base: 1 },
+      { name: "電腦使用", base: 5 },
+      { name: "電子學", base: 1 },
+      { name: "克蘇魯神話", base: 0 } // 不可被右欄選擇
+    ];
+
+    // 配點檔次：1x80, 2x70, 3x60, 2x50, 1x40 (共 9 個槽位)
+    const SKILL_TIER_CONFIG = [
+      { val: 80, count: 1, label: "80 (1 項)" },
+      { val: 70, count: 2, label: "70 (2 項)" },
+      { val: 60, count: 3, label: "60 (3 項)" },
+      { val: 50, count: 2, label: "50 (2 項)" },
+      { val: 40, count: 1, label: "40 (1 項)" }
+    ];
+
+    let selectedChipId = null;
+    let assignedAttrs = {};
+    let luckValue = null;
+    let luckRolled = false;
+
+    window.onload = () => {
+      initAttributePoolAndSlots();
+    };
+
+    /* ---------- 步驟 2: 屬性分配 (含 EDU < 60 即時紅框警告) ---------- */
+    function initAttributePoolAndSlots() {
+      const pool = document.getElementById("chipsPool");
+      const slotsContainer = document.getElementById("attrSlotsContainer");
+      pool.innerHTML = "";
+      slotsContainer.innerHTML = "";
+      assignedAttrs = {};
+
+      POOL_VALUES.forEach((val, idx) => {
+        const chip = document.createElement("div");
+        chip.className = "num-chip";
+        chip.id = `chip-${idx}`;
+        chip.setAttribute("draggable", "true");
+        chip.setAttribute("data-val", val);
+        chip.textContent = val;
+
+        chip.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", JSON.stringify({ id: chip.id, val: val }));
+          selectChip(chip.id);
+        });
+
+        chip.addEventListener("click", () => {
+          selectChip(chip.id);
+        });
+
+        pool.appendChild(chip);
+      });
+
+      ATTR_DEFS.forEach(attr => {
+        const row = document.createElement("div");
+        row.className = "attr-slot";
+        row.id = `slot-row-${attr.id}`;
+        row.innerHTML = `
+          <div style="font-weight:bold; font-size:0.88rem; color:var(--text-title);">${attr.name}</div>
+          <div class="attr-slot-drop" id="drop-${attr.id}" data-attr="${attr.id}">--</div>
+        `;
+
+        const dropTarget = row.querySelector(".attr-slot-drop");
+
+        row.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          row.classList.add("drag-over");
+        });
+        row.addEventListener("dragleave", () => {
+          row.classList.remove("drag-over");
+        });
+        row.addEventListener("drop", (e) => {
+          e.preventDefault();
+          row.classList.remove("drag-over");
+          try {
+            const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+            assignValToAttr(attr.id, data.id, data.val);
+          } catch(err){}
+        });
+
+        dropTarget.addEventListener("click", () => {
+          if (assignedAttrs[attr.id]) {
+            returnValFromAttr(attr.id);
+          } else if (selectedChipId) {
+            const chipEl = document.getElementById(selectedChipId);
+            if (chipEl) {
+              const val = parseInt(chipEl.getAttribute("data-val"));
+              assignValToAttr(attr.id, selectedChipId, val);
+            }
+          }
+        });
+
+        slotsContainer.appendChild(row);
+      });
+    }
+
+    function selectChip(chipId) {
+      document.querySelectorAll(".num-chip").forEach(c => c.classList.remove("selected"));
+      if (selectedChipId === chipId) {
+        selectedChipId = null;
+      } else {
+        selectedChipId = chipId;
+        const target = document.getElementById(chipId);
+        if (target) target.classList.add("selected");
+      }
+    }
+
+    function assignValToAttr(attrId, chipId, val) {
+      if (assignedAttrs[attrId]) returnValFromAttr(attrId);
+
+      for (const [k, v] of Object.entries(assignedAttrs)) {
+        if (v.chipId === chipId) {
+          delete assignedAttrs[k];
+          const prevDrop = document.getElementById(`drop-${k}`);
+          prevDrop.textContent = "--";
+          prevDrop.classList.remove("filled");
+          if (k === "EDU") {
+            document.getElementById("slot-row-EDU").classList.remove("slot-error");
+          }
+        }
+      }
+
+      assignedAttrs[attrId] = { chipId, val };
+      const dropEl = document.getElementById(`drop-${attrId}`);
+      dropEl.textContent = val;
+      dropEl.classList.add("filled");
+
+      // 檢查 EDU 是否小於 60，小於則框起整格顯示紅色
+      if (attrId === "EDU") {
+        const eduRow = document.getElementById("slot-row-EDU");
+        if (val < 60) {
+          eduRow.classList.add("slot-error");
+        } else {
+          eduRow.classList.remove("slot-error");
+        }
+      }
+
+      const chipEl = document.getElementById(chipId);
+      if (chipEl) {
+        chipEl.classList.add("used");
+        chipEl.classList.remove("selected");
+      }
+      selectedChipId = null;
+    }
+
+    function returnValFromAttr(attrId) {
+      if (!assignedAttrs[attrId]) return;
+      const { chipId } = assignedAttrs[attrId];
+      const chipEl = document.getElementById(chipId);
+      if (chipEl) chipEl.classList.remove("used");
+      delete assignedAttrs[attrId];
+
+      const dropEl = document.getElementById(`drop-${attrId}`);
+      dropEl.textContent = "--";
+      dropEl.classList.remove("filled");
+
+      if (attrId === "EDU") {
+        document.getElementById("slot-row-EDU").classList.remove("slot-error");
+      }
+    }
+
+    function validateAttributesAndNext() {
+      if (Object.keys(assignedAttrs).length < 8) {
+        alert("⚠️ 請將 8 個數值全部拖曳/點選分配至 8 項屬性中！");
+        return;
+      }
+      const eduVal = assignedAttrs["EDU"].val;
+      if (eduVal < 60) {
+        alert(`⚠️ 規則限制：EDU (教育) 目前為 ${eduVal}，不得低於 60！請點擊 EDU 重新調整。`);
+        return;
+      }
+      nextStep(3);
+    }
+
+    /* ---------- 步驟 3: 幸運擲骰 ---------- */
+    function rollLuckOnce() {
+      if (luckRolled) return;
+
+      const d1 = Math.floor(Math.random() * 6) + 1;
+      const d2 = Math.floor(Math.random() * 6) + 1;
+      const d3 = Math.floor(Math.random() * 6) + 1;
+      const sum = d1 + d2 + d3;
+      luckValue = sum * 5;
+      luckRolled = true;
+
+      document.getElementById("luckDisplay").textContent = luckValue;
+      const btn = document.getElementById("rollLuckBtn");
+      btn.disabled = true;
+      btn.textContent = "🔒 幸運值已鎖定 (不可重擲)";
+      document.getElementById("luckRollDetail").innerHTML = 
+        `🎲 擲骰記錄：(${d1} + ${d2} + ${d3}) × 5 = <strong>${luckValue}</strong>`;
+    }
+
+    function validateLuckAndNext() {
+      if (luckValue === null) {
+        alert("⚠️ 請先擲出幸運值！");
+        return;
+      }
+
+      const dex = assignedAttrs["DEX"] ? assignedAttrs["DEX"].val : 50;
+      const edu = assignedAttrs["EDU"] ? assignedAttrs["EDU"].val : 60;
+      
+      const dodgeSkill = skillDatabase.find(s => s.name === "閃避");
+      if (dodgeSkill) dodgeSkill.base = Math.floor(dex / 2);
+
+      const ownLangSkill = skillDatabase.find(s => s.name === "母語");
+      if (ownLangSkill) ownLangSkill.base = edu;
+
+      initSkillStepUi();
+      nextStep(4);
+    }
+
+    /* ---------- 步驟 4: 雙欄技能系統 (動態移除已選技能、禁止克蘇魯神話) ---------- */
+    function initSkillStepUi() {
+      renderSkillDropdownStructure();
+      syncSkillDropdowns();
+    }
+
+    // 建立 9 個下拉選單的結構
+    function renderSkillDropdownStructure() {
+      const container = document.getElementById("skillTiersContainer");
+      container.innerHTML = "";
+      let slotIndex = 0;
+
+      SKILL_TIER_CONFIG.forEach(tier => {
+        const group = document.createElement("div");
+        group.className = "tier-group";
+
+        group.innerHTML = `
+          <div class="tier-header-label">
+            <span>${tier.val}</span>
+            <span class="tier-header-desc">（可選 ${tier.count} 項）</span>
+          </div>
+        `;
+
+        for (let i = 0; i < tier.count; i++) {
+          const wrapper = document.createElement("div");
+          wrapper.className = "tier-select-wrapper";
+
+          const select = document.createElement("select");
+          select.id = `skill_slot_${slotIndex}`;
+          select.setAttribute("data-tier-val", tier.val);
+          select.addEventListener("change", syncSkillDropdowns);
+
+          wrapper.appendChild(select);
+          group.appendChild(wrapper);
+          slotIndex++;
+        }
+
+        container.appendChild(group);
+      });
+    }
+
+    // 同步並過濾所有下拉選單：不能選「克蘇魯神話」，且已選的技能會從其他下拉中移除
+    function syncSkillDropdowns() {
+      const selects = Array.from(document.querySelectorAll("#skillTiersContainer select"));
+      const chosenValues = selects.map(s => s.value).filter(v => v !== "");
+
+      selects.forEach((sel) => {
+        const myCurrentVal = sel.value;
+
+        // 可用技能：不能是「克蘇魯神話」，且（尚未被任何選單選中 OR 正是本選單當前選中的）
+        const availableSkills = skillDatabase.filter(sk => {
+          if (sk.name === "克蘇魯神話") return false;
+          return sk.name === myCurrentVal || !chosenValues.includes(sk.name);
+        });
+
+        let optionsHtml = `<option value="">-- 請選擇技能 --</option>`;
+        availableSkills.forEach(sk => {
+          const isSelected = (sk.name === myCurrentVal) ? "selected" : "";
+          optionsHtml += `<option value="${sk.name}" ${isSelected}>${sk.name}</option>`;
+        });
+
+        sel.innerHTML = optionsHtml;
+      });
+
+      updateSkillOverview();
+    }
+
+    // 更新左欄技能總覽（檢查配點並亮綠高亮）
+    function updateSkillOverview() {
+      const selects = document.querySelectorAll("#skillTiersContainer select");
+      const allocatedMap = {};
+
+      selects.forEach(sel => {
+        const skillName = sel.value;
+        const val = parseInt(sel.getAttribute("data-tier-val"));
+        if (skillName) {
+          allocatedMap[skillName] = val;
+        }
+      });
+
+      const listContainer = document.getElementById("skillOverviewList");
+      listContainer.innerHTML = "";
+
+      skillDatabase.forEach(sk => {
+        const isAllocated = allocatedMap.hasOwnProperty(sk.name);
+        const displayVal = isAllocated ? allocatedMap[sk.name] : sk.base;
+
+        const row = document.createElement("div");
+        row.className = `skill-item-row ${isAllocated ? "allocated" : ""}`;
+        row.innerHTML = `
+          <div class="skill-item-name">${sk.name}</div>
+          <div class="skill-item-val">${displayVal}%</div>
+        `;
+        listContainer.appendChild(row);
+      });
+    }
+
+    // 新增自訂技能
+    function addNewCustomSkill() {
+      const nameInput = document.getElementById("customSkillName");
+      const baseInput = document.getElementById("customSkillBase");
+
+      const name = nameInput.value.trim();
+      const base = parseInt(baseInput.value) || 1;
+
+      if (!name) {
+        alert("⚠️ 請輸入自訂技能名稱！");
+        return;
+      }
+
+      if (skillDatabase.some(s => s.name === name)) {
+        alert("⚠️ 該技能已存在！");
+        return;
+      }
+
+      skillDatabase.push({ name, base });
+
+      // 重新同步選單，讓新技能出現在未選擇的下拉選單中
+      syncSkillDropdowns();
+
+      nameInput.value = "";
+      baseInput.value = "1";
+    }
+
+    function validateSkillsAndNext() {
+      const selects = document.querySelectorAll("#skillTiersContainer select");
+      for (const sel of selects) {
+        if (!sel.value) {
+          alert("⚠️ 請將右側 9 個技能欄位皆選取對應技能！");
+          return;
+        }
+      }
+      nextStep(5);
+    }
+
+    /* ---------- 步驟 5: 思想與背景 ---------- */
+    function validateBackstoryAndNext() {
+      const ideology = document.getElementById("bgIdeology").value.trim();
+      const person = document.getElementById("bgPerson").value.trim();
+      const place = document.getElementById("bgPlace").value.trim();
+      const item = document.getElementById("bgItem").value.trim();
+
+      if (!ideology) {
+        alert("⚠️ 【思想與信念】為必填項目，請簡要填寫！");
+        return;
+      }
+
+      if (!person && !place && !item) {
+        alert("⚠️ 「重要之人」、「意義非凡之地」、「寶貴之物」至少需填寫其中一項！");
+        return;
+      }
+
+      nextStep(6);
+    }
+
+    /* ---------- 導航步驟控制 ---------- */
+    function updateProgress(step) {
+      const progress = document.getElementById("progressBar");
+      const indicator = document.getElementById("stepIndicator");
+      const titles = [
+        "調查員基本資料", "屬性分配", "擲幸運值", "技能總覽與分配",
+        "思想、背景與羈絆", "人物描述與物品", "角色卡生成與匯出"
+      ];
+
+      progress.style.width = `${(step / 7) * 100}%`;
+      indicator.textContent = `步驟 ${step} / 7：${titles[step - 1]}`;
+
+      for (let i = 1; i <= 7; i++) {
+        const el = document.getElementById(`step-${i}`);
+        if (el) el.classList.remove("active");
+      }
+      const currentEl = document.getElementById(`step-${step}`);
+      if (currentEl) currentEl.classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function nextStep(step) {
+      if (step === 2) {
+        const name = document.getElementById("charName").value.trim();
+        const player = document.getElementById("playerName").value.trim();
+        const occ = document.getElementById("occupation").value.trim();
+        if (!name || !player || !occ) {
+          alert("請填寫角色名稱、玩家名稱與職業！");
+          return;
+        }
+      }
+      updateProgress(step);
+    }
+
+    function prevStep(step) {
+      updateProgress(step);
+    }
+
+    /* ---------- 衍生計算與生成角色卡 ---------- */
+    function calculateDerivatives(attrs) {
+      const hp = Math.floor((attrs.CON + attrs.SIZ) / 10);
+      const mp = Math.floor(attrs.POW / 5);
+      const san = attrs.POW;
+      const dodge = Math.floor(attrs.DEX / 2);
+      const ownLang = attrs.EDU;
+
+      const strSiz = attrs.STR + attrs.SIZ;
+      let db = "0", build = 0;
+      if (strSiz <= 64) { db = "-2"; build = -2; }
+      else if (strSiz <= 84) { db = "-1"; build = -1; }
+      else if (strSiz <= 124) { db = "0"; build = 0; }
+      else if (strSiz <= 164) { db = "+1D4"; build = 1; }
+      else { db = "+1D6"; build = 2; }
+
+      let mov = 8;
+      if (attrs.DEX < attrs.SIZ && attrs.STR < attrs.SIZ) mov = 7;
+      else if (attrs.DEX > attrs.SIZ && attrs.STR > attrs.SIZ) mov = 9;
+
+      return { hp, mp, san, dodge, ownLang, db, build, mov };
+    }
+
+    function generateFinalSheet() {
+      const charName = document.getElementById("charName").value.trim() || "無名";
+      const playerName = document.getElementById("playerName").value.trim() || "玩家";
+      const occupation = document.getElementById("occupation").value.trim() || "自由業";
+      const gender = document.getElementById("gender").value.trim() || "未設定";
+      const age = document.getElementById("age").value || "28";
+      const residence = document.getElementById("residence").value.trim() || "無";
+      const birthplace = document.getElementById("birthplace").value.trim() || "無";
+
+      const attrs = {
+        STR: assignedAttrs["STR"].val,
+        CON: assignedAttrs["CON"].val,
+        DEX: assignedAttrs["DEX"].val,
+        APP: assignedAttrs["APP"].val,
+        POW: assignedAttrs["POW"].val,
+        SIZ: assignedAttrs["SIZ"].val,
+        INT: assignedAttrs["INT"].val,
+        EDU: assignedAttrs["EDU"].val
+      };
+
+      const derived = calculateDerivatives(attrs);
+
+      const ideology = document.getElementById("bgIdeology").value.trim();
+      const person = document.getElementById("bgPerson").value.trim();
+      const place = document.getElementById("bgPlace").value.trim();
+      const item = document.getElementById("bgItem").value.trim();
+      const bond = document.getElementById("bondChoice").value;
+
+      const desc = document.getElementById("charDesc").value.trim() || "無";
+      const inventory = document.getElementById("charInventory").value.trim() || "一般隨身雜物";
+
+      const skillSelects = document.querySelectorAll("#skillTiersContainer select");
+      const allocatedSkills = [];
+      skillSelects.forEach(sel => {
+        allocatedSkills.push({ name: sel.value, value: sel.getAttribute("data-tier-val") });
+      });
+
+      // 1. 凍豆腐簡易格式
+      const dondofuText = `【CoC 7th 調查員】${charName}（PL: ${playerName}）
+職業：${occupation}　年齡：${age}　性別：${gender}
+現居地：${residence}　出生地：${birthplace}
+
+【當前狀態】
+HP：${derived.hp}/${derived.hp}　MP：${derived.mp}/${derived.mp}
+SAN：${derived.san}/99　LUK：${luckValue}/99
+DB：${derived.db}　體格：${derived.build}　MOV：${derived.mov}
+
+【調查員屬性】
+STR:${attrs.STR}　CON:${attrs.CON}　DEX:${attrs.DEX}　APP:${attrs.APP}
+POW:${attrs.POW}　SIZ:${attrs.SIZ}　INT:${attrs.INT}　EDU:${attrs.EDU}
+
+【核心專精技能】
+閃避：${derived.dodge}%
+母語：${derived.ownLang}%
+${allocatedSkills.map(s => `${s.name}：${s.value}%`).join("\n")}
+
+【背景與羈絆】
+思想與信念：${ideology}
+重要之人：${person || "無"}
+意義之地：${place || "無"}
+寶貴之物：${item || "無"}
+核心羈絆：${bond}
+
+【個人描述】
+${desc}
+
+＝＝攜帶物品＝＝
+${inventory}`;
+
+      document.getElementById("dondofuExportBox").textContent = dondofuText;
+
+      // 2. Google 試算表對齊格式 (TSV)
+      const sheetText = `調查員名稱\t${charName}\t玩家名稱\t${playerName}\t職業\t${occupation}\t年齡\t${age}\t性別\t${gender}
+現居地\t${residence}\t出生地\t${birthplace}\tHP\t${derived.hp}\tMP\t${derived.mp}\tSAN\t${derived.san}\tLUK\t${luckValue}
+STR\t${attrs.STR}\tCON\t${attrs.CON}\tDEX\t${attrs.DEX}\tAPP\t${attrs.APP}
+POW\t${attrs.POW}\tSIZ\t${attrs.SIZ}\tINT\t${attrs.INT}\tEDU\t${attrs.EDU}
+DB\t${derived.db}\t體格\t${derived.build}\tMOV\t${derived.mov}\t閃避\t${derived.dodge}\t母語\t${derived.ownLang}
+思想與信念\t${ideology}
+重要之人\t${person || "無"}\t意義非凡之地\t${place || "無"}\t寶貴之物\t${item || "無"}\t羈絆\t${bond}
+個人描述\t${desc}
+攜帶物品\t${inventory.replace(/\n/g, "、")}
+核心技能\t${allocatedSkills.map(s => `${s.name}(${s.value}%)`).join(", ")}`;
+
+      document.getElementById("sheetExportBox").textContent = sheetText;
+
+      nextStep(7);
+    }
+
+    function copyToClipboard(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById("toastMsg");
+        toast.style.display = "block";
+        setTimeout(() => { toast.style.display = "none"; }, 2000);
+      }).catch(() => {
+        alert("複製失敗，請手動複製。");
+      });
+    }
+
+    function restart() {
+      if (confirm("確定要重設並建立新角色嗎？")) {
+        window.location.reload();
+      }
+    }
+  </script>
+</body>
+</html>
