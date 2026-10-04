@@ -1332,13 +1332,15 @@ ${inventory}`;
       const skillValueRow = skillDatabase.map(sk => allocatedMap[sk.name] ?? sk.base).join("\t");
       // 移除換行與 Tab，避免多行文字讓技能列偏移
       const oneLine = text => text.replace(/[\t\r\n]+/g, " ");
+      // 體格與傷害加成，例：體格 1、DB +1D4 → "+1&1D4"
+      const buildDb = `${derived.build > 0 ? "+" : ""}${derived.build}&${derived.db.replace(/^\+/, "")}`;
 
       const sheetText = `調查員名稱\t${charName}\t玩家名稱\t${playerName}\t職業\t${occupation}\t年齡\t${age}\t性別\t${gender}
 現居地\t${residence}\t出生地\t${birthplace}\tHP\t${derived.hp}\tMP\t${derived.mp}\tSAN\t${derived.san}\tLUK\t${luckValue}
 STR\t${attrs.STR}\tCON\t${attrs.CON}\tDEX\t${attrs.DEX}\tAPP\t${attrs.APP}
 POW\t${attrs.POW}\tSIZ\t${attrs.SIZ}\tINT\t${attrs.INT}\tEDU\t${attrs.EDU}
 DB\t${derived.db}\t體格\t${derived.build}\tMOV\t${derived.mov}\t閃避\t${derived.dodge}\t母語\t${derived.ownLang}
-思想與信念\t${oneLine(ideology)}
+思想與信念\t${oneLine(ideology)}\t\t\t\t\t\t\t體格與傷害加成\t${buildDb}
 重要之人\t${oneLine(person || "無")}\t意義非凡之地\t${oneLine(place || "無")}\t寶貴之物\t${oneLine(item || "無")}\t羈絆\t${bond}
 個人描述\t${oneLine(desc)}
 攜帶物品\t${oneLine(inventory.replace(/\n/g, "、"))}
