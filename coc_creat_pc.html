@@ -645,7 +645,7 @@
     <div class="card" id="step-4">
       <div class="card-title">📚 技能總覽與分配</div>
       <div class="card-subtitle">
-        右欄分配專長點數（<strong>不可重複選取，已選項目會自動從其他下拉移除；配點不可選「克蘇魯神話」</strong>），左欄即時連動變更並以 <strong style="color:var(--highlight-green);">綠色</strong> 標記。
+        右欄分配專長點數（<strong>不可重複選取，已選項目會自動從其他下拉移除；配點不可選「克蘇魯神話」、「火器-手槍」、「火器-步槍/霰彈」</strong>），左欄即時連動變更並以 <strong style="color:var(--highlight-green);">綠色</strong> 標記。
       </div>
 
       <div class="skill-split-layout">
@@ -832,6 +832,9 @@
       { name: "電子學", base: 1 },
       { name: "克蘇魯神話", base: 0 } // 不可被右欄選擇
     ];
+
+    // 不可被右欄選擇的技能（仍保留在總覽與輸出中，以初始值呈現）
+    const UNSELECTABLE_SKILLS = ["克蘇魯神話", "火器-手槍", "火器-步槍/霰彈"];
 
     // 配點檔次：1x80, 2x70, 3x60, 2x50, 1x40 (共 9 個槽位)
     const SKILL_TIER_CONFIG = [
@@ -1087,9 +1090,9 @@
       selects.forEach((sel) => {
         const myCurrentVal = sel.value;
 
-        // 可用技能：不能是「克蘇魯神話」，且（尚未被任何選單選中 OR 正是本選單當前選中的）
+        // 可用技能：不能是不可配點技能，且（尚未被任何選單選中 OR 正是本選單當前選中的）
         const availableSkills = skillDatabase.filter(sk => {
-          if (sk.name === "克蘇魯神話") return false;
+          if (UNSELECTABLE_SKILLS.includes(sk.name)) return false;
           return sk.name === myCurrentVal || !chosenValues.includes(sk.name);
         });
 
@@ -1347,7 +1350,12 @@ DB\t${derived.db}\t體格\t${derived.build}\tMOV\t${derived.mov}\t閃避\t${deri
 ${skillNameRow}
 ${skillValueRow}`;
 
-      document.getElementById("sheetExportBox").textContent = sheetText;
+      // 以 + - = @ 開頭且非純數字的格子，前面加零寬空白，避免試算表當成公式（畫面仍顯示原字串）
+      const safeSheetText = sheetText.split("\n").map(line => line.split("\t").map(cell =>
+        /^[+\-=@]/.test(cell) && isNaN(Number(cell)) ? "​" + cell : cell
+      ).join("\t")).join("\n");
+
+      document.getElementById("sheetExportBox").textContent = safeSheetText;
 
       nextStep(7);
     }
